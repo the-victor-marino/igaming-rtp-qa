@@ -1,0 +1,24 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# PyCharm IDE files
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Generated chart (optional — see note below)
+# rtp_convergence.png
