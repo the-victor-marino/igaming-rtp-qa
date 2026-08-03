@@ -80,7 +80,7 @@ is blocked.
 
 ## 📄 License
 
-Released under the MIT License. See [`LICENSE`](LICENSE) for details.
+Released under the MIT License. See [`LICENSE`](https://mit-license.org/license.txt) for details.
 
 ---
 
