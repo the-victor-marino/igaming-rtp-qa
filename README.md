@@ -12,34 +12,28 @@
 
 ### Installation
 
-
-bash
-
-Clone the repo
+1. Clone the repo
 
 git clone https://github.com/YOUR_USERNAME/igaming-rtp-qa.git
  cd igaming-rtp-qa
 
-Create & activate a virtual environment
+2. Create & activate a virtual environment
 
 python -m venv .venv source .venv/bin/activate # Windows: .venv\Scripts\activate
 
-Install dependencies
+3. Install dependencies
 
 pip install -r requirements.txt
 
 
 ### Run the test suite
 
-
-bash pytest -v --cov=src
+pytest -v --cov=src
 
 
 ### Generate the convergence chart
 
-
-bash python run_simulation.py
-
+python run_simulation.py
 
 ---
 
@@ -86,5 +80,5 @@ Released under the MIT License. See [`LICENSE`](https://mit-license.org/license.
 
 ## 👤 Author
 
-**Victor Marino** — QA Engineer specialising in Game & iGaming testing.
+**Victor Marino** - QA Engineer specialising in Game & iGaming testing.
 [LinkedIn](https://www.linkedin.com/in/the-victor-marino/)
