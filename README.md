@@ -1,9 +1,6 @@
 # 🎰 iGaming RTP QA Pipeline
 
- |
-
- is deliberate: it
-> proves the audit actually **catches** an unfair RNG, rather than passing
+> it proves the audit actually **catches** an unfair RNG, rather than passing
 > everything blindly.
 
 ---
