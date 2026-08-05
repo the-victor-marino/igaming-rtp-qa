@@ -14,7 +14,7 @@
 
 1. Clone the repo
 
-git clone https://github.com/YOUR_USERNAME/igaming-rtp-qa.git
+git clone https://github.com/the-victor-marino/igaming-rtp-qa.git
  cd igaming-rtp-qa
 
 2. Create & activate a virtual environment
