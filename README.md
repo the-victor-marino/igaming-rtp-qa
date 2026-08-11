@@ -3,6 +3,10 @@
 > it proves the audit actually **catches** an unfair RNG, rather than passing
 > everything blindly.
 
+## 🗂️ Project Structure
+
+igaming-rtp-qa/ ├── .github/ │ └── workflows/ │ └── ci.yml # GitHub Actions CI pipeline ├── src/ │ ├── slot_engine.py # Game logic + theoretical RTP + volatility + Monte Carlo │ ├── rng.py # Secure (CSPRNG) RNG provider for real-money play │ ├── rng_audit.py # Chi-square RNG fairness audit │ └── wallet.py # Player wallet, session model & responsible-gambling limits ├── tests/ │ ├── attacker.py # Adversary toolkit: MT19937 state-recovery (for the security test) │ ├── test_rtp.py # RTP correctness & convergence │ ├── test_payouts.py # Config integrity & payout accounting │ ├── test_volatility.py # Variance, std dev, hit frequency & volatility index │ ├── test_rng_fairness.py # RNG randomness audit (incl. negative test) │ ├── test_player_behaviour.py # Gambler's Ruin & realistic session behaviour │ ├── test_responsible_gambling.py # Loss-limit / player-protection controls │ └── test_destructive_rng_predictability.py # 🔥 Destructive: RNG state-recovery attack ├── reports/ │ └── rtp_convergence.png # Generated chart (CI artifact) ├── run_simulation.py # Entry point → runs sim & saves chart ├── requirements.txt └── README.m
+
 ---
 
 ## 🚀 Getting Started
