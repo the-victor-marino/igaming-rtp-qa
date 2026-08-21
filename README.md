@@ -51,7 +51,7 @@ iGaming.
 | `test_rng_fairness.py` | Statistical fairness | The RNG passes a chi-square fairness audit **and** a deliberately rigged distribution is correctly *rejected* (negative testing). |
 | `test_player_behaviour.py` | Games & gamers | **Gambler's Ruin** — a finite bankroll almost always ends in ruin over a long session (house edge), while short sessions can still end in profit; sessions halt cleanly when funds run out. |
 | `test_responsible_gambling.py` | Regulatory / player protection | A player who hits their **loss limit** is stopped, and that limit is never exceeded across many players — reflecting UKGC/MGA player-protection requirements. |
-| `test_destructive_rng_predictability.py` | 🔥 Security / destructive | Proves a non-cryptographic PRNG (Mersenne Twister) is **fully predictable** via state recovery — the real slot-machine cheating attack — and guards that the production RNG is a CSPRNG that resists it. |
+| `test_destructive_rng_predictability.py` | Security / destructive | Proves a non-cryptographic PRNG (Mersenne Twister) is **fully predictable** via state recovery — the real slot-machine cheating attack — and guards that the production RNG is a CSPRNG that resists it. |
 
 > Two tests are especially deliberate. The **negative fairness test** proves the
 > audit actually *catches* an unfair RNG rather than passing everything blindly.
