@@ -22,3 +22,6 @@ Thumbs.db
 
 # Generated chart (optional — see note below)
 # rtp_convergence.png
+# Generated reports
+reports/
+rtp_convergence.png

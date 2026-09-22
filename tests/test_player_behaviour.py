@@ -39,7 +39,7 @@ def test_short_session_can_end_in_profit():
     (and would feel awful to players).
     """
     saw_profit = any(
-        play_session(100, bet=1, max_spins=50, seed=s)["peak_balance"] > 100
+        play_session(100, bet=1, max_spins=50, seed=s)["final_balance"] > 100
         for s in range(100)
     )
     assert saw_profit

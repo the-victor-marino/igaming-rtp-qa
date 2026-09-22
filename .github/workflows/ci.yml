@@ -2,9 +2,9 @@ name: iGaming RTP QA Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   test:
@@ -28,6 +28,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Prepare reports directory
+        run: mkdir -p reports
+
       - name: Run QA test suite
         run: pytest -v --cov=src --cov-report=term-missing --junitxml=reports/results.xml
 
@@ -38,7 +41,7 @@ jobs:
         if: always()   # upload even if tests fail, so you can inspect results
         uses: actions/upload-artifact@v4
         with:
-          name: rtp-qa-report
+          name: rtp-qa-report-${{ matrix.python-version }}
           path: |
             reports/
             rtp_convergence.png

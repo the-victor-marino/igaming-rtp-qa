@@ -1,112 +1,71 @@
-"""
-slot_engine.py
---------------
-Core logic for a simple 3-reel slot machine, used as the "system under test"
-for an iGaming QA portfolio project.
-
-The module exposes small, single-purpose, deterministic functions so that a
-pytest suite can assert on their return values.
-"""
-
-from __future__ import annotations
-
-from dataclasses import dataclass, field
+"""Three-reel slot model. Money and payout multipliers are integer credits."""
+from dataclasses import dataclass
 import numpy as np
+from .rng import make_secure_rng
+
 
 @dataclass(frozen=True)
 class SlotConfig:
-    """Immutable configuration describing the slot game.
-
-    All three reels are identical and share the same 20-symbol strip.
-    A win only occurs on a three-of-a-kind across the single centre payline.
-    """
     symbols: tuple[str, ...] = ("Cherry", "Lemon", "Bell", "Bar", "Seven")
-    strip_counts: tuple[int, ...] = (6, 5, 4, 3, 2)   # sums to 20
-    payouts: tuple[int, ...] = (5, 10, 15, 25, 50)    # multiplier per 3-of-a-kind
+    strip_counts: tuple[int, ...] = (6, 5, 4, 3, 2)
+    payouts: tuple[int, ...] = (5, 10, 15, 25, 50)
     bet: int = 1
 
+    def __post_init__(self):
+        if not self.symbols or len(self.symbols) != len(self.strip_counts) or len(self.symbols) != len(self.payouts):
+            raise ValueError("symbols, strip_counts and payouts must have equal nonzero length")
+        if len(set(self.symbols)) != len(self.symbols) or any(not isinstance(s, str) or not s for s in self.symbols):
+            raise ValueError("symbols must be distinct nonempty strings")
+        if any(type(c) is not int or c <= 0 for c in self.strip_counts):
+            raise ValueError("strip counts must be positive integers")
+        if any(type(p) is not int or p < 0 for p in self.payouts):
+            raise ValueError("payouts must be nonnegative integers")
+        if type(self.bet) is not int or self.bet <= 0:
+            raise ValueError("bet must be a positive integer")
+
     @property
-    def reel_length(self) -> int:
+    def reel_length(self):
         return sum(self.strip_counts)
 
-    def __post_init__(self) -> None:
-        # Basic integrity checks so a broken config fails fast.
-        assert len(self.symbols) == len(self.strip_counts) == len(self.payouts), \
-            "symbols, strip_counts and payouts must be the same length"
-        assert all(c > 0 for c in self.strip_counts), "strip counts must be positive"
 
-# A single shared default configuration used across the project.
 DEFAULT_CONFIG = SlotConfig()
 
-def symbol_probabilities(config: SlotConfig = DEFAULT_CONFIG) -> np.ndarray:
-    """Probability of each symbol appearing on a single reel."""
-    counts = np.asarray(config.strip_counts, dtype=float)
-    return counts / config.reel_length
 
-def theoretical_rtp(config: SlotConfig = DEFAULT_CONFIG) -> float:
-    """Return the exact, analytically derived RTP (as a fraction, e.g. 0.545625).
+def symbol_probabilities(config=DEFAULT_CONFIG):
+    return np.asarray(config.strip_counts, dtype=float) / config.reel_length
 
-    Reels are independent, so P(three-of-a-kind of symbol i) = p_i ** 3.
-    RTP = sum_i ( p_i**3 * payout_i ) / bet
-    """
-    probs = symbol_probabilities(config)
-    payouts = np.asarray(config.payouts, dtype=float)
-    expected_return = np.sum((probs ** 3) * payouts)
-    return float(expected_return / config.bet)
 
-def simulate(
-    n_spins: int,
-    config: SlotConfig = DEFAULT_CONFIG,
-    seed: int | None = None,
-) -> dict:
-    """Run a Monte Carlo simulation of `n_spins` spins.
+def payout_for_reels(reels, config=DEFAULT_CONFIG):
+    """Return the payout multiplier for three symbols on the centre payline."""
+    if len(reels) != 3 or any(symbol not in config.symbols for symbol in reels):
+        raise ValueError("exactly three configured symbols are required")
+    return config.payouts[config.symbols.index(reels[0])] if reels[0] == reels[1] == reels[2] else 0
 
-    Parameters
-    ----------
-    n_spins : int
-        Number of spins to simulate.
-    config : SlotConfig
-        Game configuration.
-    seed : int | None
-        Seed for the random number generator. Pass an int for reproducible
-        (test-friendly) runs; pass None for a fresh random run.
 
-    Returns
-    -------
-    dict with keys:
-        'simulated_rtp'   : float  – final cumulative RTP (fraction)
-        'cumulative_rtp'  : np.ndarray – cumulative RTP after each spin
-        'symbol_counts'   : np.ndarray – observed count of each symbol across all reels
-        'total_win'       : float  – total credits won
-        'total_bet'       : float  – total credits wagered
-    """
-    if n_spins <= 0:
+def spin_payout(rng=None, config=DEFAULT_CONFIG):
+    """Select independent weighted reel stops; secure OS RNG is the default."""
+    if rng is None:
+        rng = make_secure_rng()
+    strip = tuple(symbol for symbol, count in zip(config.symbols, config.strip_counts) for _ in range(count))
+    return payout_for_reels(tuple(strip[rng.randrange(len(strip))] for _ in range(3)), config)
+
+
+def theoretical_rtp(config=DEFAULT_CONFIG):
+    """Expected return divided by the configured stake."""
+    return float(np.sum(symbol_probabilities(config) ** 3 * np.asarray(config.payouts)) / config.bet)
+
+
+def simulate(n_spins, config=DEFAULT_CONFIG, seed=None):
+    """Vectorized seeded research simulation, separate from the secure spin path."""
+    if type(n_spins) is not int or n_spins <= 0:
         raise ValueError("n_spins must be a positive integer")
-
     rng = np.random.default_rng(seed)
-    probs = symbol_probabilities(config)
-    payouts = np.asarray(config.payouts, dtype=float)
-    n_symbols = len(config.symbols)
-
-    # Draw the three reels for every spin at once (vectorised = fast).
-    reels = rng.choice(n_symbols, size=(n_spins, 3), p=probs)
-
-    # A win requires all three reels to match.
-    is_win = (reels[:, 0] == reels[:, 1]) & (reels[:, 1] == reels[:, 2])
-
-    win_amounts = np.zeros(n_spins, dtype=float)
-    win_amounts[is_win] = payouts[reels[is_win, 0]]
-
-    cumulative_win = np.cumsum(win_amounts)
-    cumulative_bet = np.arange(1, n_spins + 1) * config.bet
-    cumulative_rtp = cumulative_win / cumulative_bet
-
-    symbol_counts = np.bincount(reels.ravel(), minlength=n_symbols)
-
-    return {
-        "simulated_rtp": float(cumulative_rtp[-1]),
-        "cumulative_rtp": cumulative_rtp,
-        "symbol_counts": symbol_counts,
-        "total_win": float(cumulative_win[-1]),
-        "total_bet": float(cumulative_bet[-1]),
-    }
+    reels = rng.choice(len(config.symbols), size=(n_spins, 3), p=symbol_probabilities(config))
+    wins = (reels[:, 0] == reels[:, 1]) & (reels[:, 1] == reels[:, 2])
+    amounts = np.zeros(n_spins, dtype=float)
+    amounts[wins] = np.asarray(config.payouts)[reels[wins, 0]]
+    cumulative_win = np.cumsum(amounts)
+    cumulative_rtp = cumulative_win / (np.arange(1, n_spins + 1) * config.bet)
+    return {"simulated_rtp": float(cumulative_rtp[-1]), "cumulative_rtp": cumulative_rtp,
+            "symbol_counts": np.bincount(reels.ravel(), minlength=len(config.symbols)),
+            "total_win": float(cumulative_win[-1]), "total_bet": float(n_spins * config.bet)}

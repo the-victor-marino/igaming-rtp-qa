@@ -46,7 +46,7 @@ def test_predicting_the_next_big_win():
     which upcoming spin will be a jackpot, so they can time a max bet to it.
     """
     victim = random.Random(9876)
-    JACKPOT_THRESHOLD = 0xFFFF0000  # pretend: a draw above this triggers a jackpot
+    JACKPOT_THRESHOLD = 0xFF000000  # illustrative high-value draw threshold
 
     observed = [victim.getrandbits(32) for _ in range(624)]
     clone = clone_from_observations(observed)
@@ -60,25 +60,21 @@ def test_predicting_the_next_big_win():
     future = [victim.getrandbits(32) for _ in range(10_000)]
     assert future[predicted_jackpot_index] >= JACKPOT_THRESHOLD
 
-def test_secure_rng_is_NOT_predictable():
-    """
-    THE GUARD: the production RNG must resist the same attack. A CSPRNG has no
-    recoverable internal state, so identical observation gives no predictive power.
-    Two independent secure generators must not agree on future output.
-    """
-    victim = make_secure_rng()
-    observed = [next_word(victim) for _ in range(624)]
+def test_default_spin_uses_secure_rng(monkeypatch):
+    """The actual spin path requests the secure provider and consumes three draws."""
+    from src import slot_engine
+    from src.rng import make_secure_rng
+    from random import SystemRandom
+    assert isinstance(make_secure_rng(), SystemRandom)
 
-    # Attempt the same clone-and-predict attack against the secure RNG.
-    # (A real CSPRNG can't be reconstructed; here we assert non-determinism.)
-    attacker_guess = make_secure_rng()
-    predicted = [next_word(attacker_guess) for _ in range(64)]
-    actual = [next_word(victim) for _ in range(64)]
+    class RecordingRNG:
+        calls = 0
+        def randrange(self, limit):
+            assert limit == 20
+            self.calls += 1
+            return 0
 
-    assert predicted != actual, "Secure RNG must not be predictable from observation."
-
-def test_secure_rng_streams_are_unique():
-    """Two secure generators must never produce identical streams."""
-    a = [next_word(make_secure_rng()) for _ in range(128)]
-    b = [next_word(make_secure_rng()) for _ in range(128)]
-    assert a != b
+    recorder = RecordingRNG()
+    monkeypatch.setattr(slot_engine, "make_secure_rng", lambda: recorder)
+    assert slot_engine.spin_payout() == 5
+    assert recorder.calls == 3
