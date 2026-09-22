@@ -13,7 +13,7 @@ matplotlib.use("Agg")  # headless backend so it works on CI servers
 import matplotlib.pyplot as plt
 
 from src.slot_engine import theoretical_rtp, simulate
-from src.rng_audit import chi_square_fairness, is_fair
+from src.rng_audit import chi_square_fairness, does_not_reject_distribution
 
 def main() -> None:
     n_spins = 2_000_000
@@ -34,7 +34,7 @@ def main() -> None:
     print("-" * 44)
     print(f"Chi-square statistic: {chi2:.4f}")
     print(f"P-value:              {p_value:.4f}")
-    print(f"RNG fairness:         {'PASS' if is_fair(p_value) else 'FAIL'}")
+    print(f"Frequency test:       {'NOT REJECTED' if does_not_reject_distribution(p_value) else 'REJECTED'}")
     print("=" * 44)
 
     # --- Convergence chart ---

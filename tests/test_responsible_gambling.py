@@ -9,7 +9,7 @@ def test_loss_limit_halts_play():
     net_loss = 1000 - result["final_balance"]
     assert result["stopped_by_limit"] is True
     # The limit should never be blown through by more than a single stake.
-    assert net_loss <= 100 + 10
+    assert net_loss <= 100
 
 def test_loss_limit_never_exceeded_across_many_players():
     """The protection must hold for every seed, not just a lucky one."""
@@ -18,4 +18,4 @@ def test_loss_limit_never_exceeded_across_many_players():
             starting_balance=1000, bet=10, loss_limit=200,
             max_spins=1_000_000, seed=seed,
         )
-        assert (1000 - result["final_balance"]) <= 200 + 10
+        assert (1000 - result["final_balance"]) <= 200
