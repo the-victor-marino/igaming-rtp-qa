@@ -64,8 +64,10 @@ def simulate(n_spins, config=DEFAULT_CONFIG, seed=None):
     wins = (reels[:, 0] == reels[:, 1]) & (reels[:, 1] == reels[:, 2])
     amounts = np.zeros(n_spins, dtype=float)
     amounts[wins] = np.asarray(config.payouts)[reels[wins, 0]]
+    win_counts = np.bincount(reels[wins, 0], minlength=len(config.symbols))
     cumulative_win = np.cumsum(amounts)
     cumulative_rtp = cumulative_win / (np.arange(1, n_spins + 1) * config.bet)
     return {"simulated_rtp": float(cumulative_rtp[-1]), "cumulative_rtp": cumulative_rtp,
             "symbol_counts": np.bincount(reels.ravel(), minlength=len(config.symbols)),
+            "win_counts": win_counts,
             "total_win": float(cumulative_win[-1]), "total_bet": float(n_spins * config.bet)}
