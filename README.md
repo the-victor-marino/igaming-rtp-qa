@@ -14,7 +14,7 @@ python -m pytest -q
 python run_simulation.py
 ```
 
-The report script writes the chart to `rtp_convergence.png` and `reports/`. The GitHub Actions workflow runs tests and creates a simulation artifact on pushes and pull requests to `master`.
+Open `reports/qa_report.html` in a browser after running the script. It includes a summary, RTP and hit-rate results, per-symbol prize accounting, a frequency check, the pytest outcome, charts, and clear limitations. The HTML is self-contained and can be shared as one file. The script also saves supporting charts in `reports/` and keeps `rtp_convergence.png` at the project root for existing links. By default it runs pytest to include fresh test results. In CI, the workflow passes its existing JUnit XML file to avoid running the suite twice. CI uploads the report and test results on pushes and pull requests to `master`.
 
 ## Model and test strategy
 
