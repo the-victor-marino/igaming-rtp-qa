@@ -1,39 +1,93 @@
-# iGaming RTP QA Pipeline
+<div align="center">
 
-A small three-reel slot model for demonstrating game QA. It tests payout rules, integer-credit wallet integrity, a session net-loss limit, theoretical versus simulated RTP, symbol frequencies, and an illustrative attack against Mersenne Twister. This is a portfolio model, not a certified game or RNG audit.
+# 🎰 Slot QA Lab
 
-## Run
+**Play the game. Trigger a bug. See the test catch it.**
 
-Requires Python 3.11 or 3.12.
+A Python QA portfolio project exploring payouts, wallet integrity and randomness in a three-reel slot.
+
+[**▶ Try the interactive lab**](https://the-victor-marino.github.io/igaming-rtp-qa/) · [Browse the tests](tests/) · [View CI runs](https://github.com/the-victor-marino/igaming-rtp-qa/actions)
+
+[![QA pipeline](https://github.com/the-victor-marino/igaming-rtp-qa/actions/workflows/ci.yml/badge.svg)](https://github.com/the-victor-marino/igaming-rtp-qa/actions/workflows/ci.yml)
+
+</div>
+
+---
+
+### Try it in 30 seconds
+
+Open the lab → select **Double spending** → click **Send simultaneous bets**.
+
+Watch two requests compete for the same credits, then compare **expected vs. actual** results. You can also change stakes, force reel outcomes and toggle payout or loss-limit bugs.
+
+*The browser lab runs JavaScript demonstrations. The Python test suite runs separately with pytest.*
+
+### What I test
+
+| Area | Risk checked |
+| :--- | :--- |
+| **Payouts** | Wrong prizes and invalid game inputs |
+| **Wallet** | Incorrect balances, invalid stakes and double spending |
+| **Loss limits** | A next bet taking session net loss beyond the cap |
+| **RTP & randomness** | Return-to-player deviations, biased frequencies, dependence and predictable RNG output |
+
+**Tools:** Python · pytest · NumPy · SciPy · GitHub Actions · JavaScript
+
+### Evidence you can inspect
+
+- **[Automated tests](tests/)** — known outcomes, boundaries and deliberate failure scenarios.
+- **[HTML report generator](run_simulation.py)** — test results, two million simulated spins and explanatory charts.
+- **[CI workflow](.github/workflows/ci.yml)** — repeats checks on Python 3.11 / 3.12 and uploads reports.
+
+<details>
+<summary><strong>Run locally & generate the report</strong></summary>
+
+Clone the repository and open its folder. Use Python 3.11 or 3.12 to match CI.
 
 ```bash
+git clone https://github.com/the-victor-marino/igaming-rtp-qa.git
+cd igaming-rtp-qa
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-python -m pip install -r requirements.txt
-python -m pytest -q
-python run_simulation.py
 ```
 
-Open `reports/qa_report.html` in a browser after running the script. It includes a summary, RTP and hit-rate results, per-symbol prize accounting, a frequency check, the pytest outcome, charts, and clear limitations. The HTML is self-contained and can be shared as one file. The script also saves supporting charts in `reports/` and keeps `rtp_convergence.png` at the project root for existing links. By default it runs pytest to include fresh test results. In CI, the workflow passes its existing JUnit XML file to avoid running the suite twice. CI uploads the report and test results on pushes and pull requests to `master`.
+**Windows PowerShell**
 
-## Model and test strategy
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe run_simulation.py
+```
 
-- `src/slot_engine.py`: weighted, independent reel stops and exact three-of-a-kind payouts. `spin_payout()` uses the OS-backed `SystemRandom` by default; a caller may inject an RNG for deterministic tests.
-- `src/wallet.py`: integer credits, checked stakes and winnings, a lock around each balance operation, and player sessions. A seeded session uses `random.Random` **only for repeatable experiments**. An unseeded session uses the secure provider.
-- `src/rng_audit.py`: chi-square goodness-of-fit on marginal symbol frequencies. A non-rejection at a chosen significance level is not proof of fairness, independence, or unpredictability.
-- `simulate()` is a separate vectorized NumPy research harness. Its seeded results are reproducible; it is not the secure production spin path.
-- `tests/`: exact payout examples, malformed inputs, concurrent bets, loss-limit boundaries, seeded RTP, deliberately biased observations, transition dependence with positive and negative controls, and MT19937 state recovery.
+**macOS / Linux**
 
-The session loss limit is **net loss relative to the starting balance**. A bet is rejected if losing that entire stake could push net loss above the limit. Balances and stakes use integer credits; applications that accept currency should convert to minor units at the boundary.
+```bash
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python run_simulation.py
+```
 
-## Interpreting the evidence
+Open **`reports/qa_report.html`** in your browser. The command runs pytest automatically; the HTML includes its charts and can be shared as one file.
 
-The theoretical RTP is computed from each symbol's cubed single-reel probability and its payout multiplier. The seeded Monte Carlo test checks proximity for one specified configuration. The chi-square test checks a single marginal distribution; its negative control demonstrates detection of a large bias. These tests do not certify a live game. The MT19937 test receives raw 32-bit outputs, reconstructs state, and predicts future outputs; ordinary players do not generally observe those raw words. The secure-path test checks integration with `SystemRandom`, not a proof of cryptographic security.
+To run only the tests, use your virtual environment's Python with `-m pytest -v`.
 
-CI reports failures and uploads artifacts. Merge protection, if desired, must be configured as a repository ruleset.
+</details>
 
-## Further QA work
+<details>
+<summary><strong>Code map & model boundaries</strong></summary>
 
-A production system would need transactional persistence across processes, recovery from failed payouts after a debit, time-scoped responsible-gambling limits, monitoring, a full reel mapping review, and independent RNG certification. Statistical extensions could test cross-reel independence and runs with a documented multiple-testing policy.
+| File | Responsibility |
+| :--- | :--- |
+| [`src/slot_engine.py`](src/slot_engine.py) | Weighted reels, payouts and RTP simulation |
+| [`src/wallet.py`](src/wallet.py) | Integer credits, locked balance operations and session limits |
+| [`src/rng_audit.py`](src/rng_audit.py) | Statistical diagnostics |
+| [`src/report.py`](src/report.py) | Readable QA evidence |
+| [`docs/`](docs/) | Interactive browser lab |
 
-**Victor Marino** · [LinkedIn](https://www.linkedin.com/in/the-victor-marino/)
+- Normal unseeded spins use OS-backed `SystemRandom`. Seeded sessions and NumPy simulations support repeatable experiments.
+- The loss cap measures net loss from the starting balance and checks the full next stake.
+- A frequency check does not prove fairness, independence or unpredictability. The MT19937 demonstration assumes access to raw 32-bit outputs.
+- This portfolio model is not a certified game. Live use would require durable transactions, payout recovery, time-scoped controls and independent review. CI reports failures; merge protection requires repository rules.
+
+</details>
+
+---
+
+**Victor Marino** · Game production → QA · [LinkedIn](https://www.linkedin.com/in/the-victor-marino/)
