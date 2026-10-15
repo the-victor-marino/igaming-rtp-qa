@@ -35,9 +35,9 @@ Watch two requests compete for the same credits, then compare **expected vs. act
 
 ### Evidence you can inspect
 
-- **[Automated tests](tests/)** — known outcomes, boundaries and deliberate failure scenarios.
-- **[HTML report generator](run_simulation.py)** — test results, two million simulated spins and explanatory charts.
-- **[CI workflow](.github/workflows/ci.yml)** — repeats checks on Python 3.11 / 3.12 and uploads reports.
+- **[Automated tests](tests/)** - known outcomes, boundaries and deliberate failure scenarios.
+- **[HTML report generator](run_simulation.py)** - test results, two million simulated spins and explanatory charts.
+- **[CI workflow](.github/workflows/ci.yml)** - repeats checks on Python 3.11 / 3.12 and uploads reports.
 
 <details>
 <summary><strong>Run locally & generate the report</strong></summary>
